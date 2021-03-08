@@ -42,22 +42,19 @@ class Lantern:
         else: 
             self.dt = dt
         
-        self._group_name = None
+        self._config = None
     
     @property
     def config(self):
-        # TODO: cache config - shouldn't change for a session??
-        endpoint = 'config'
-        
-        return self._get(endpoint)
+        if self._config is None:
+            endpoint = 'config'
+            self._config = self._get(endpoint)
+        return self._config 
 
     @property
     def group_name(self):
-        # TODO: work around until I know how to get groups directly
-        if self._group_name is None:
-            today = self.today()
-            self._group_name = today['group_name']
-        return self._group_name
+        # TODO: get the name from the selected group later
+        return self.config['breaker_groups'][0]['name']
     
     @property
     def group_ids(self):
