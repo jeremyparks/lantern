@@ -45,12 +45,25 @@ class Lantern:
         self._group_name = None
     
     @property
+    def config(self):
+        # TODO: cache config - shouldn't change for a session??
+        endpoint = 'config'
+        
+        return self._get(endpoint)
+
+    @property
     def group_name(self):
         # TODO: work around until I know how to get groups directly
         if self._group_name is None:
             today = self.today()
             self._group_name = today['group_name']
         return self._group_name
+    
+    @property
+    def group_ids(self):
+        config = self.config
+        breaker_groups = config['breaker_groups']
+        return [breaker_group['_id'] for breaker_group in breaker_groups]
         
     def start_of_day(self):
         """Start of the day from datetime object"""
@@ -67,8 +80,8 @@ class Lantern:
         midnight = self.dt.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
         return int(midnight.timestamp()) * 1000
 
-    def _get(self, group, view, start, json=True):
-        url = os.path.join(self.base_url, f'energy/group/{group}/{view}/{start}')
+    def _get(self, endpoint, json=True):
+        url = os.path.join(self.base_url, endpoint)
         
         response = self.session.get(url)
         
@@ -77,14 +90,21 @@ class Lantern:
         else:
             return response
 
-    def today(self, group=1):
-        return self._get(group, 'DAY', self.start_of_day())
+    def today(self):
+        group = self.group_ids[0]
+        endpoint = f'energy/group/{group}/DAY/{self.start_of_day()}'
+        return self._get(endpoint)
         
-    def month(self, group=1):
-        return self._get(group, 'MONTH', self.start_of_month())
+    def month(self):
+        # TODO: grab the first group for now
+        group = self.group_ids[0]
+        endpoint = f'energy/group/{group}/MONTH/{self.start_of_month()}'
+        return self._get(endpoint)
 
-    def year(self, group=1):
-        return self._get(group, 'YEAR', self.start_of_year())
+    def year(self):
+        group = self.group_ids[0]
+        endpoint = f'energy/group/{group}/YEAR/{self.start_of_year()}'
+        return self._get(endpoint)
 
 
 if __name__ == '__main__':
