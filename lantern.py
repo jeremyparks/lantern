@@ -1,8 +1,10 @@
 import base64
+from dataclasses import dataclass, field
 from datetime import datetime
 import os
 import requests
 import struct
+from typing import List
 
 
 # joules / 3600000
@@ -22,6 +24,53 @@ def decode_block_to_kwh(group):
     binary = base64.b64decode(b64)
     # struct unpack aslways returns a tuple even if one element
     return [f[0] / 3600000.0 for f in struct.iter_unpack('>f', binary)]
+
+
+@dataclass
+class Breaker:
+    panel: int
+    space: int
+    meter: int
+    hub: int
+    port: int
+    name: str
+    size_amps: int
+    calibration_factor: float
+    low_pass_filter: float
+    polarity: str
+    double_power: bool
+    type: str
+    description: str = ''
+
+
+class Panel:
+    def __init__(self, account_id, name, index, spaces, meter, breakers=None):
+        self.account_id = account_id
+        self.name = name
+        self.index = index
+        self.spaces = spaces
+        self.meter = meter
+
+        if breakers is None:
+            self.breakers = []
+        
+        self._space_map = None
+
+    @property
+    def space_map(self):
+        if self._space_map is None:
+            spaces = {index: None for index in range(1, self.spaces)}
+
+            for breaker in self.breakers:
+                spaces[breaker.space] = breaker
+            
+            self._space_map = spaces
+            
+        return self._space_map
+    
+    def __repr__(self):
+        args = ', '.join(f'{k}={v}' for k, v in vars(self).items())
+        return f'Panel({args})'
 
 
 class Lantern:

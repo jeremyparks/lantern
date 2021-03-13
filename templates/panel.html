@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block body %}
+{% for panel in panels.values() %}
+  {{ panel.name }}
+  <table>
+    <tr>
+      <th>Column 1</th>
+      <th>Column 2</th> 
+    </tr>
+  {% for index in range(1, panel.spaces, 2) %}
+    <tr>
+      <td>{{ 'Empty' if not panel.space_map[index] else panel.space_map[index].name }}</td>
+      <td>{{ 'Empty' if not panel.space_map[index+1] else panel.space_map[index+1].name }}</td> 
+    </tr>
+  {% endfor %} 
+  </table>
+{% endfor %}
+{% endblock %}

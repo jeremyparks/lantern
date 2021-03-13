@@ -12,8 +12,10 @@ import lantern
 app = Flask(__name__)
 
 
+
+
 @app.route('/')
-def hello_world():
+def home():
     l = lantern.Lantern(os.environ['LANTERN_USER'], os.environ['LANTERN_PASSWORD'])
     payload = {
         'group_name': l.group_name,
@@ -60,3 +62,24 @@ def month():
 @app.route('/year')
 def year():
     return 'This is the year view'
+
+@app.route('/panel')
+def panel_config():
+    l = lantern.Lantern(os.environ['LANTERN_USER'], os.environ['LANTERN_PASSWORD'])
+
+    config = l.config
+
+    panels = {}
+
+    for panel in config['panels']:
+        panels[panel['index']] = lantern.Panel(**panel)
+        print(panels[panel['index']])
+
+    breaker_groups = lantern.flatten(config['breaker_groups'][0]['sub_groups'])
+
+    for group in breaker_groups:
+        for breaker in group['breakers']:
+            panel_index = breaker['panel']
+            panels[panel_index].breakers.append(lantern.Breaker(**breaker))
+
+    return render_template('panel.html', panels=panels)
